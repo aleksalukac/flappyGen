@@ -20,6 +20,7 @@ namespace flappyBird
     class Program
     {
         public static Random random = new Random();
+        public static DateTime localDate = DateTime.Now;
         public const int numberOfGenerations = 100;
         public const int oldPopulation = 5;
         public const int newRandom = 95;
@@ -34,11 +35,11 @@ namespace flappyBird
             {
                 for (int j = 0; j < 10; j++)
                 {
-                    table[i, j] = '-';
+                    table[i, j] = random.Next(0, 8) == 1 && (i % 10 == 5 || i % 10 == 4) ? '#' : '-';
                 }
             }
 
-            for (int i = 10; i < tableSize; i += 7)
+            for (int i = 10; i < tableSize; i += 10)
             {
                 int randomNumber = random.Next(0, 8);
                 for (int j = 0; j < 10; j++)
@@ -56,9 +57,19 @@ namespace flappyBird
             {
                 for (int j = 0; j < 10; j++)
                 {
-                    Console.Write(table[i, j]);
+                    //Console.Write(table[i, j]);
+                    using (System.IO.StreamWriter file =
+                        new System.IO.StreamWriter(@"C:\Users\Aleksa\source\repos\flappyBird\results\map_" + localDate.ToString("yyyy-dd-M--HH-mm-ss") + ".txt", true))
+                    {
+                        file.Write(table[i, j]);
+                    }
                 }
-                Console.WriteLine();
+                //Console.WriteLine();
+                using (System.IO.StreamWriter file =
+                       new System.IO.StreamWriter(@"C:\Users\Aleksa\source\repos\flappyBird\results\map_" + localDate.ToString("yyyy-dd-M--HH-mm-ss") + ".txt", true))
+                {
+                    file.WriteLine();
+                }
             }
         }
 
@@ -110,7 +121,7 @@ namespace flappyBird
 
             for(int i = 0; i < entity.Moves.Count; i++)
             {
-                table2[i, playerPosition] = '-';
+                //table2[i, playerPosition] = '-';
                 try
                 {
                     playerPosition += entity.Moves[i] == Side.left ? -1 : 1;
@@ -130,14 +141,14 @@ namespace flappyBird
             return 0;
         }
 
-        static void PlayAndPrint(Entity entity, char[,] table)
+        static void PlayAndPrint(Entity entity, char[,] table, int numberOfMoves, int generation)
         {
             char[,] table2 = (char[,])table.Clone();
             int playerPosition = 5;
 
             for (int i = 0; i < entity.Moves.Count; i++)
             {
-                table2[i, playerPosition] = '-';
+                //table2[i, playerPosition] = '-';
                 try
                 {
                     playerPosition += entity.Moves[i] == Side.left ? -1 : 1;
@@ -150,11 +161,15 @@ namespace flappyBird
                 {
                     break;
                 }
-
                 //Console.WriteLine("*******************************************");
                 //PrintMap(ref table);
             }
-            Console.WriteLine("*******************************************");
+            //Console.WriteLine("*******************************************");
+            using (System.IO.StreamWriter file =
+                        new System.IO.StreamWriter(@"C:\Users\Aleksa\source\repos\flappyBird\results\map_" + localDate.ToString("yyyy-dd-M--HH-mm-ss") + ".txt", true))
+            {
+                file.Write("*****************\n result: " + numberOfMoves + " generation: " + generation + "\n\n");
+            }
             PrintMap(ref table2);
         }
 
@@ -164,9 +179,13 @@ namespace flappyBird
 
             int bestScore = -1;
             int besti = -1, bestj = -1;
+            int generationNumber = 0;
 
             for(int i = 0; i < numberOfGenerations; i++)
             {
+                if (bestScore > tableSize * 0.95)
+                    break;
+
                 for(int j = 0; j < generationSize; j++)
                 {
                     for (int k = 0; k < tableSize; k++)
@@ -186,9 +205,10 @@ namespace flappyBird
                     }
                 }
                 Console.WriteLine("Generation: " + i + " best score: " + bestScore);
+                generationNumber = i;
             }
 
-            PlayAndPrint(generation[besti, bestj], table);
+            PlayAndPrint(generation[besti, bestj], table, bestScore, generationNumber);
 
 
             return null;
@@ -200,7 +220,7 @@ namespace flappyBird
 
             SetPlayerToStart(ref table);
 
-            //PrintMap(ref table);
+            PrintMap(ref table);
 
             FindBestMoves(table);
 
